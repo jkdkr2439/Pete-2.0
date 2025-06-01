@@ -1,0 +1,62 @@
+# pete-2.0/src/main.py
+from vdp import InputHandler, SeedTriggerEngine, FieldResonanceEvaluator, ThoughtMemoryManager, DriftCoreEngine, Thought
+from ece import ThoughtVerdictEngine
+from gs import GenesisSeed, WHDriftGenerator, AutoMetaphorGenerator
+
+def main():
+    # Initialize modules
+    input_handler = InputHandler()
+    trigger_engine = SeedTriggerEngine()
+    field_evaluator = FieldResonanceEvaluator()
+    memory_manager = ThoughtMemoryManager()
+    drift_engine = DriftCoreEngine(field_evaluator, memory_manager)
+    verdict_engine = ThoughtVerdictEngine()
+    all_thoughts = []
+
+    # Process input thoughts
+    raw_inputs = [
+        "I always wonder why we exist",
+        "If we love but are not loved back",
+        "Logical thinking is the foundation of science"
+    ]
+
+    for raw in raw_inputs:
+        signal = input_handler.receive_input(raw)
+        thought = trigger_engine.trigger_seed(signal)
+        drift_result = drift_engine.drift_thought(thought)
+        verdict_result = verdict_engine.evaluate_thought(thought)
+        all_thoughts.append(thought)
+        print("→", drift_result)
+        print("   Drift path:", thought.drift_path)
+        print("   Verdict:", verdict_result)
+
+    # Generate autonomous thoughts with GS
+    gs = GenesisSeed(past_thoughts=all_thoughts)
+    whgen = WHDriftGenerator()
+    metaphorgen = AutoMetaphorGenerator()
+
+    seed_thought = gs.generate_seed_thought()
+    missing_field = gs.detect_field_gap()
+    gs.tag_thought_field_gap(seed_thought, missing_field)
+    metaphorgen.attach_metaphor(seed_thought)
+
+    wh_thought = whgen.generate_wh_question()
+    metaphorgen.attach_metaphor(wh_thought)
+
+    for auto_thought in [seed_thought, wh_thought]:
+        drift_result = drift_engine.drift_thought(auto_thought)
+        verdict_result = verdict_engine.evaluate_thought(auto_thought)
+        all_thoughts.append(auto_thought)
+        print("→ (GS)", auto_thought.content)
+        print("   Drift path:", auto_thought.drift_path)
+        print("   Priority field:", auto_thought.resonance_scores.get('priority_field'))
+        print("   Metaphor:", auto_thought.resonance_scores.get('metaphor'))
+        print("   Verdict:", verdict_result)
+
+    print("\n📊 Summary:")
+    print(verdict_engine.report_summary())
+    print("\n📉 Collapse Field Summary:")
+    print(verdict_engine.trace_collapse_fields())
+
+if __name__ == "__main__":
+    main()

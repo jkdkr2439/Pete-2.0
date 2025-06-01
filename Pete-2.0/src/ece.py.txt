@@ -1,0 +1,54 @@
+# pete-2.0/src/ece.py
+class ThoughtVerdictEngine:
+    def __init__(self, collapse_threshold=0.15):
+        self.collapse_threshold = collapse_threshold
+        self.collapsed_thoughts = []
+        self.sustained_thoughts = []
+        self.liminal_thoughts = []
+        self.collapse_trace = []
+
+    def evaluate_thought(self, thought):
+        if not thought.drift_path:
+            self.collapsed_thoughts.append((thought, "No drift path"))
+            return "💥 COLLAPSED – no drift path"
+        final_field = thought.drift_path[-1]
+        final_score = thought.resonance_scores.get(final_field, 0)
+        if final_score >= 0.3:
+            self.sustained_thoughts.append((thought, final_field))
+            return f"🧬 SUSTAINED – strong in field: {final_field}"
+        elif 0.1 <= final_score < 0.3:
+            self.liminal_thoughts.append((thought, final_field))
+            return f"☁️ LIMINAL – weakly resonant in field: {final_field}"
+        else:
+            self.collapsed_thoughts.append((thought, f"Weak field: {final_field}"))
+            self.collapse_trace.append({
+                'content': thought.content,
+                'drift_path': thought.drift_path,
+                'reason': 'resonance_too_low',
+                'last_field': final_field,
+                'score': final_score
+            })
+            return f"💥 COLLAPSED – weak resonance in field: {final_field}"
+
+    def report_summary(self):
+        return {
+            'sustained': len(self.sustained_thoughts),
+            'liminal': len(self.liminal_thoughts),
+            'collapsed': len(self.collapsed_thoughts)
+        }
+
+    def get_collapsed(self):
+        return [(t.content, reason) for t, reason in self.collapsed_thoughts]
+
+    def get_liminal(self):
+        return [(t.content, field) for t, field in self.liminal_thoughts]
+
+    def get_sustained(self):
+        return [(t.content, field) for t, field in self.sustained_thoughts]
+
+    def trace_collapse_fields(self):
+        summary = {}
+        for entry in self.collapse_trace:
+            field = entry['last_field']
+            summary[field] = summary.get(field, 0) + 1
+        return summary

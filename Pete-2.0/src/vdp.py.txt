@@ -1,0 +1,94 @@
+# pete-2.0/src/vdp.py
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+class InputHandler:
+    def receive_input(self, raw_input):
+        return raw_input.strip().lower()
+
+class SeedTriggerEngine:
+    def trigger_seed(self, input_signal):
+        return Thought(content=input_signal)
+
+class Thought:
+    def __init__(self, content):
+        self.content = content
+        self.id = hash(content)
+        self.resonance_scores = {}
+        self.drift_path = []
+
+class DriftCoreEngine:
+    def __init__(self, field_evaluator, memory_manager):
+        self.field_evaluator = field_evaluator
+        self.memory_manager = memory_manager
+
+    def drift_thought(self, thought, manual_field=None):
+        if manual_field:
+            thought.drift_path.append(manual_field)
+            self.memory_manager.store_thought(thought)
+            return f"Thought manually directed to field: {manual_field}"
+        strongest_field = self.field_evaluator.evaluate(thought)
+        if strongest_field:
+            thought.drift_path.append(strongest_field)
+            self.memory_manager.store_thought(thought)
+            return f"Thought drifted to field: {strongest_field}"
+        else:
+            fallback_field = self.field_evaluator.find_fallback(thought)
+            if fallback_field:
+                thought.drift_path.append(fallback_field)
+                self.memory_manager.store_thought(thought)
+                return f"Thought fallback drifted to field: {fallback_field}"
+            else:
+                self.memory_manager.store_idle(thought)
+                return "Thought has no strong resonance, remains idle."
+
+class FieldResonanceEvaluator:
+    def __init__(self):
+        self.field_samples = {
+            'logic': "if then logic reasoning proof assumption conclusion",
+            'emotion': "love sadness joy anger happiness suffering",
+            'intuition': "feeling hunch vague intuition",
+            'language': "word sentence grammar expression",
+            'visual': "color light image shadow creativity",
+            'reflection': "meaning existence identity who am I philosophy contemplation"
+        }
+        self.fallback_order = list(self.field_samples.keys())
+        self.vectorizer = TfidfVectorizer()
+        self.field_vectors = self.vectorizer.fit_transform(self.field_samples.values())
+        self.field_list = list(self.field_samples.keys())
+
+    def evaluate(self, thought):
+        thought_vec = self.vectorizer.transform([thought.content])
+        sims = cosine_similarity(thought_vec, self.field_vectors).flatten()
+        scores = dict(zip(self.field_list, sims))
+        thought.resonance_scores = scores
+        max_field = max(scores, key=scores.get)
+        return max_field if scores[max_field] > 0.1 else None
+
+    def find_fallback(self, thought):
+        for field in self.fallback_order:
+            if field in thought.content:
+                return field
+        return None
+
+class ThoughtMemoryManager:
+    def __init__(self):
+        self.thoughts_by_id = {}
+        self.idle_thoughts = []
+
+    def store_thought(self, thought):
+        self.thoughts_by_id[thought.id] = {
+            'content': thought.content,
+            'resonance': thought.resonance_scores,
+            'drift_path': thought.drift_path
+        }
+
+    def store_idle(self, thought):
+        self.idle_thoughts.append(thought)
+
+    def get_all_drift_paths(self):
+        return {tid: data['drift_path'] for tid, data in self.thoughts_by_id.items()}
+
+    def get_idle_thoughts(self):
+        return [t.content for t in self.idle_thoughts]

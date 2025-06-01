@@ -1,0 +1,65 @@
+# pete-2.0/src/gs.py
+import random
+
+class GenesisSeed:
+    def __init__(self, past_thoughts):
+        self.past_thoughts = past_thoughts
+        self.field_list = ['logic', 'emotion', 'intuition', 'language', 'visual', 'reflection']
+        self.seed_templates = [
+            "What would happen if {concept}?",
+            "Why do we always feel {concept}?",
+            "Does {concept} truly exist?",
+            "How can we understand {concept}?"
+        ]
+        self.concepts = ["truth", "emotion", "meaning", "pain", "intuition", "dream"]
+
+    def generate_seed_thought(self):
+        concept = random.choice(self.concepts)
+        template = random.choice(self.seed_templates)
+        sentence = template.format(concept=concept)
+        return Thought(content=sentence)
+
+    def detect_field_gap(self):
+        counter = {f: 0 for f in self.field_list}
+        for t in self.past_thoughts:
+            for f in t.drift_path:
+                counter[f] += 1
+        min_field = min(counter, key=counter.get)
+        return min_field
+
+    def tag_thought_field_gap(self, thought, missing_field):
+        thought.resonance_scores['priority_field'] = missing_field
+        return thought
+
+class WHDriftGenerator:
+    def __init__(self):
+        self.wh_templates = {
+            'what': "What is the nature of {concept}?",
+            'why': "Why do we experience {concept}?",
+            'how': "How can we transform {concept}?",
+            'when': "When does {concept} become truth?",
+            'where': "Where does {concept} originate?",
+            'who': "Who defines {concept}?"
+        }
+        self.concepts = ["consciousness", "fear", "freedom", "pain", "identity", "time"]
+
+    def generate_wh_question(self):
+        wh = random.choice(list(self.wh_templates.keys()))
+        concept = random.choice(self.concepts)
+        template = self.wh_templates[wh]
+        return Thought(content=template.format(concept=concept))
+
+class AutoMetaphorGenerator:
+    def __init__(self):
+        self.metaphors_nature = [
+            "a drop falling into the ocean", "a leaf carried by the wind", "a lightning bolt in the night"
+        ]
+        self.metaphors_social = [
+            "a child learning to speak", "a person searching for themselves", "a dream yet to be named"
+        ]
+
+    def attach_metaphor(self, thought):
+        meta1 = random.choice(self.metaphors_nature)
+        meta2 = random.choice(self.metaphors_social)
+        thought.resonance_scores['metaphor'] = f"{meta1} / {meta2}"
+        return thought
