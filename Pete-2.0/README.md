@@ -1,4 +1,3 @@
-# pete-2.0/README.md
 # Pete 2.0: A Non-Linear Cognitive Framework
 
 Pete 2.0 is an experimental cognitive framework for simulating non-linear, resonance-based thought formation, as described in the paper "Pete 2.0: A Non-Linear Cognitive Framework for Thought Drift and Ontological Resonance" by Kevin (June 2025). It comprises three modules:
